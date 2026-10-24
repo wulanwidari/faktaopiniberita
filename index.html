@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuis Interaktif Fakta & Opini - Teks Berita SMP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        /* Rasio presentasi 16:9 yang nyaman untuk papan interaktif & layar lebar */
+        .interactive-board-container {
+            aspect-ratio: 16 / 9;
+            max-height: 86vh;
+        }
+        @media (max-width: 1024px) {
+            .interactive-board-container {
+                aspect-ratio: auto;
+                max-height: none;
+            }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(96, 165, 250, 0.6);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(37, 99, 235, 0.8);
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen p-3 sm:p-5 text-slate-800 select-none">
+
+    <!-- Header / Navigasi Atas -->
+    <header class="w-full max-w-6xl mx-auto flex items-center justify-between py-2.5 px-4 sm:px-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-sm border border-white/80">
+        <div class="flex items-center space-x-3">
+            <!-- Logo tiruan Kemendikdasmen -->
+            <div class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-xl shadow-sm text-xs md:text-sm tracking-wide flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                Kemendikdasmen
+            </div>
+            <span class="text-xs md:text-sm font-semibold text-blue-900 hidden sm:inline">Bahasa Indonesia Kelas VII • Teks Berita</span>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="openNewsModal()" class="bg-sky-100 hover:bg-sky-200 active:scale-95 text-blue-800 font-bold px-3.5 py-2 rounded-xl text-xs md:text-sm transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <span>📖 Baca Teks Berita</span>
+            </button>
+            <div id="score-badge" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs md:text-sm shadow-md flex items-center gap-1">
+                <span>Skor:</span> <span id="current-score">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Konten Utama (Langsung Kuis Rasio 16:9 yang Nyaman untuk Papan Interaktif) -->
+    <main class="w-full max-w-6xl mx-auto my-3 md:my-4 flex-grow flex flex-col justify-center">
+        
+        <!-- Screen: Halaman Soal Kuis -->
+        <div id="quiz-screen" class="interactive-board-container glass-card p-4 sm:p-7 rounded-3xl shadow-2xl flex flex-col justify-between">
+            
+            <!-- Atas: Header Pertanyaan (Tanpa teks 'Tantangan bonus' atau nomor kalimat) -->
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h2 id="quiz-title" class="text-xl md:text-2xl font-extrabold text-blue-950 tracking-tight">
+                            Fakta dan Opini dalam Berita
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-600">Pilih jenis kalimat dan status dukungannya dari teks berita.</p>
+                    </div>
+                    <span id="question-counter" class="text-xs sm:text-sm font-semibold text-blue-700 bg-white px-4 py-2 rounded-xl shadow-sm self-start sm:self-auto border border-blue-100">
+                        Bagian 1 dari 2
+                    </span>
+                </div>
+
+                <!-- Kontainer Daftar Kalimat Aktif (Tanpa Tanda Petik) -->
+                <div id="statements-container" class="space-y-3 md:space-y-3.5">
+                    <!-- Diisi via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Bawah: Instruksi & Navigasi -->
+            <div class="pt-3 border-t border-blue-100/80 mt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-blue-900 font-bold text-xs md:text-sm bg-white/70 py-2 px-4 rounded-xl border border-white">
+                    Fakta atau opini? Apakah bacaan mendukungnya?
+                </div>
+
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <button onclick="prevStep()" id="btn-prev" class="hidden bg-white hover:bg-slate-50 active:scale-95 text-blue-800 font-semibold px-5 py-2.5 rounded-2xl shadow border border-blue-200 text-sm transition cursor-pointer">
+                        ← Kembali
+                    </button>
+                    <button onclick="nextStep()" id="btn-next" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-7 py-2.5 rounded-2xl shadow-lg text-sm md:text-base transition flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center">
+                        <span id="next-btn-text">Selanjutnya</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Screen: Halaman Hasil Akhir -->
+        <div id="result-screen" class="hidden glass-card p-6 md:p-10 rounded-3xl shadow-xl text-center space-y-6">
+            <div class="inline-block p-4 bg-emerald-100 rounded-full text-emerald-600 mb-2 shadow-sm">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-blue-950">Luar Biasa, Kuis Selesai!</h2>
+            <p class="text-slate-600 text-sm md:text-base">
+                Kamu telah berhasil menyelesaikan analisis seluruh kalimat berdasarkan teks berita kekeringan Sungai Cibening.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl max-w-xs mx-auto shadow-inner">
+                <span class="text-xs uppercase tracking-wider text-blue-600 font-bold block mb-1">Skor Akhir Kamu</span>
+                <span id="final-score" class="text-4xl font-extrabold text-blue-900">0 / 6</span>
+            </div>
+            <div class="pt-4 flex flex-col sm:flex-row justify-center gap-3">
+                <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg transition cursor-pointer">
+                    🔄 Ulangi Kuis
+                </button>
+                <button onclick="showReview()" class="bg-white hover:bg-slate-50 active:scale-95 text-blue-800 font-bold px-6 py-3.5 rounded-2xl shadow border border-blue-200 transition cursor-pointer">
+                    📖 Lihat Pembahasan
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer / Badge Nomor Halaman di Pojok Kanan Bawah -->
+    <footer class="w-full max-w-6xl mx-auto flex justify-between items-center py-2 px-2 text-xs text-blue-900 font-medium">
+        <span>Materi Bahasa Indonesia SMP • Fakta & Opini</span>
+        <div id="page-indicator" class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shadow-md text-xs">
+            24
+        </div>
+    </footer>
+
+    <!-- Modal Teks Berita Lengkap -->
+    <div id="news-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-4 border border-blue-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2 text-blue-700 font-bold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                    <span>Teks Berita Referensi Lengkap</span>
+                </div>
+                <button onclick="closeNewsModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-2 cursor-pointer">✕</button>
+            </div>
+            <div class="text-slate-700 text-sm md:text-base leading-relaxed space-y-3 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+                <p>
+                    Musim kemarau yang berlangsung sejak awal Juli menyebabkan Sungai Cibening di Desa Sukamaju, Kabupaten Bandung, mengalami kekeringan pada Selasa (28 Juli 2026). Akibatnya, warga desa mulai kesulitan memperoleh air bersih untuk kebutuhan sehari-hari dan mengairi sawah.
+                </p>
+                <p>
+                    Menurut Badan Penanggulangan Bencana Daerah (BPBD) setempat, kondisi tersebut terjadi karena curah hujan yang sangat rendah selama beberapa minggu terakhir. Untuk mengatasi masalah tersebut, pemerintah daerah menyalurkan bantuan air bersih menggunakan mobil tangki serta mengimbau masyarakat agar menghemat penggunaan air.
+                </p>
+            </div>
+            <button onclick="closeNewsModal()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold py-3.5 rounded-xl shadow transition cursor-pointer">Tutup & Kembali ke Kuis</button>
+        </div>
+    </div>
+
+    <!-- Custom Modal Pesan Pengganti Alert -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-blue-100">
+            <div id="modal-icon" class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">⚠️</div>
+            <h3 id="modal-title" class="text-lg font-bold text-slate-900">Perhatian</h3>
+            <p id="modal-message" class="text-slate-600 text-sm leading-relaxed whitespace-pre-line">Silakan pilih jawaban untuk semua kalimat terlebih dahulu.</p>
+            <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold py-3 rounded-xl shadow transition cursor-pointer">OK, Mengerti</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logika Kuis -->
+    <script>
+        // Data Soal Lengkap Berdasarkan Teks Berita (Tanpa Tanda Petik)
+        const quizPages = [
+            {
+                pageNumber: 24,
+                title: "Fakta dan Opini dalam Berita",
+                statements: [
+                    {
+                        id: 1,
+                        numberText: "01",
+                        text: "Sungai Cibening di Desa Sukamaju, Kabupaten Bandung, mengalami kekeringan pada Selasa, 28 Juli 2026.",
+                        correctType: "Fakta",
+                        correctSupport: "Didukung",
+                        explanation: "Merupakan peristiwa nyata yang disertai keterangan tempat, waktu, dan kejadian yang dapat diverifikasi dalam teks berita."
+                    },
+                    {
+                        id: 2,
+                        numberText: "02",
+                        text: "Bantuan air bersih merupakan solusi terbaik saat ini untuk mengatasi kekeringan.",
+                        correctType: "Opini",
+                        correctSupport: "Tidak Didukung",
+                        explanation: "Mengandung unsur penilaian subjektif kata terbaik yang merupakan pendapat atau opini pribadi."
+                    },
+                    {
+                        id: 3,
+                        numberText: "03",
+                        text: "Pemerintah mengimbau masyarakat agar menghemat penggunaan air.",
+                        correctType: "Fakta",
+                        correctSupport: "Didukung",
+                        explanation: "Kalimat ini melaporkan adanya tindakan imbauan nyata yang disebutkan secara eksplisit dalam bacaan teks berita."
+                    }
+                ]
+            },
+            {
+                pageNumber: 25,
+                title: "Fakta dan Opini dalam Berita",
+                statements: [
+                    {
+                        id: 4,
+                        numberText: "04",
+                        text: "Musim kemarau tahun ini sangat menyengsarakan seluruh warga desa.",
+                        correctType: "Opini",
+                        correctSupport: "Tidak Didukung",
+                        explanation: "Mengandung unsur penilaian emosional dan subjektif (sangat menyengsarakan) yang bersifat pendapat."
+                    },
+                    {
+                        id: 5,
+                        numberText: "05",
+                        text: "Pemerintah daerah menyalurkan bantuan air bersih menggunakan mobil tangki.",
+                        correctType: "Fakta",
+                        correctSupport: "Didukung",
+                        explanation: "Tindakan nyata penanganan bencana yang dilaporkan secara faktual dalam teks berita."
+                    },
+                    {
+                        id: 6,
+                        numberText: "06",
+                        text: "Curah hujan sangat rendah selama beberapa minggu terakhir di wilayah tersebut.",
+                        correctType: "Fakta",
+                        correctSupport: "Didukung",
+                        explanation: "Kondisi klimatologis faktual yang dilaporkan langsung oleh BPBD setempat dalam teks berita."
+                    }
+                ]
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let userAnswers = {};
+
+        window.onload = function() {
+            renderCurrentPage();
+        };
+
+        function openNewsModal() {
+            document.getElementById('news-modal').classList.remove('hidden');
+            document.getElementById('news-modal').classList.add('flex');
+        }
+
+        function closeNewsModal() {
+            document.getElementById('news-modal').classList.remove('flex');
+            document.getElementById('news-modal').classList.add('hidden');
+        }
+
+        function showModal(title, message, isError = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            const iconEl = document.getElementById('modal-icon');
+            if (isError) {
+                iconEl.className = "w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold";
+                iconEl.innerText = "⚠️";
+            } else {
+                iconEl.className = "w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold";
+                iconEl.innerText = "✓";
+            }
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.remove('flex');
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function renderCurrentPage() {
+            const pageData = quizPages[currentStepIndex];
+            document.getElementById('quiz-title').innerText = pageData.title;
+            document.getElementById('question-counter').innerText = `Bagian ${currentStepIndex + 1} dari ${quizPages.length}`;
+            document.getElementById('page-indicator').innerText = pageData.pageNumber;
+
+            const container = document.getElementById('statements-container');
+            container.innerHTML = "";
+
+            pageData.statements.forEach((stmt) => {
+                const currentAns = userAnswers[stmt.id] || { type: '', support: '' };
+
+                const cardHTML = `
+                    <div class="bg-white p-3 sm:p-3.5 rounded-2xl shadow-sm border border-blue-100 space-y-2 transition hover:shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-600 text-white font-bold w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm text-xs md:text-sm">
+                                ${stmt.numberText}
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-slate-800 font-semibold text-xs sm:text-sm md:text-base leading-snug">
+                                    ${stmt.text}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Pilihan Jawab Fakta/Opini & Dukungan -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-0 sm:pl-11">
+                            <!-- Pilihan Jenis: Fakta / Opini -->
+                            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+                                <button type="button" onclick="selectAnswer(${stmt.id}, 'type', 'Fakta')" 
+                                    class="flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${currentAns.type === 'Fakta' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}">
+                                    Fakta
+                                </button>
+                                <button type="button" onclick="selectAnswer(${stmt.id}, 'type', 'Opini')" 
+                                    class="flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${currentAns.type === 'Opini' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}">
+                                    Opini
+                                </button>
+                            </div>
+
+                            <!-- Pilihan Dukungan: Didukung / Tidak Didukung -->
+                            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+                                <button type="button" onclick="selectAnswer(${stmt.id}, 'support', 'Didukung')" 
+                                    class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${currentAns.support === 'Didukung' ? 'bg-sky-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}">
+                                    Didukung Teks
+                                </button>
+                                <button type="button" onclick="selectAnswer(${stmt.id}, 'support', 'Tidak Didukung')" 
+                                    class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${currentAns.support === 'Tidak Didukung' ? 'bg-sky-600 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}">
+                                    Tidak Didukung
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+
+            if (currentStepIndex === 0) {
+                document.getElementById('btn-prev').classList.add('hidden');
+                document.getElementById('next-btn-text').innerText = "Selanjutnya";
+            } else {
+                document.getElementById('btn-prev').classList.remove('hidden');
+                document.getElementById('next-btn-text').innerText = "Selesaikan Kuis";
+            }
+            updateScoreDisplay();
+        }
+
+        function selectAnswer(stmtId, category, value) {
+            if (!userAnswers[stmtId]) {
+                userAnswers[stmtId] = { type: '', support: '' };
+            }
+            userAnswers[stmtId][category] = value;
+            renderCurrentPage();
+        }
+
+        function validateCurrentPage() {
+            const pageData = quizPages[currentStepIndex];
+            for (let stmt of pageData.statements) {
+                const ans = userAnswers[stmt.id];
+                if (!ans || !ans.type || !ans.support) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function nextStep() {
+            if (!validateCurrentPage()) {
+                showModal("Belum Lengkap", "Harap pilih kategori Fakta/Opini dan Status Dukungan Teks untuk semua kalimat di halaman ini!", true);
+                return;
+            }
+
+            if (currentStepIndex < quizPages.length - 1) {
+                currentStepIndex++;
+                renderCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                showResultScreen();
+            }
+        }
+
+        function prevStep() {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                renderCurrentPage();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function calculateScore() {
+            let score = 0;
+            quizPages.forEach(page => {
+                page.statements.forEach(stmt => {
+                    const userAns = userAnswers[stmt.id];
+                    if (userAns && userAns.type === stmt.correctType && userAns.support === stmt.correctSupport) {
+                        score += 1;
+                    }
+                });
+            });
+            return score;
+        }
+
+        function updateScoreDisplay() {
+            const currentScore = calculateScore();
+            document.getElementById('current-score').innerText = currentScore;
+        }
+
+        function showResultScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            const finalScore = calculateScore();
+            document.getElementById('final-score').innerText = `${finalScore} / 6`;
+            document.getElementById('page-indicator').innerText = "26";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function restartQuiz() {
+            userAnswers = {};
+            currentStepIndex = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            renderCurrentPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showReview() {
+            let reviewText = "PEMBAHASAN KUNCI JAWABAN:\n\n";
+            quizPages.forEach(page => {
+                page.statements.forEach(stmt => {
+                    reviewText += `• Kalimat ${stmt.numberText}: ${stmt.text}\n  Jawaban: ${stmt.correctType} (${stmt.correctSupport})\n  Alasan: ${stmt.explanation}\n\n`;
+                });
+            });
+            showModal("Pembahasan Lengkap", reviewText, false);
+        }
+    </script>
+</body>
+</html>
